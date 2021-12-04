@@ -9,7 +9,13 @@ const {
 const express = require('express');
 const router = express.Router();
 
-router.route('/users').get(getAllUsers);
-router.route('/users/:id').get(getSingleUser).patch(updateUser);
-router.route('/users/profile').get(showCurrenUser).patch(updateUserPassword);
+router.route('/').get(getAllUsers);
+
+router.route('/showMe').get(showCurrentUser)
+router.route('/updateUser').patch(updateUser)
+router.route('/updateUserPassword').patch(updateUserPassword)
+
+router.route('/:id').get(getSingleUser)
+
+module.exports = router;
 
