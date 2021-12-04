@@ -1,6 +1,7 @@
 const User = require('../models/User')
 const {StatusCodes} = require('http-status-codes')
 const CustomErrors = require('../errors');
+const {attachCookiesToResponse} = require('../utils')
 
 const register = async (req, res) => {
     const {email, name, password} = req.body
@@ -12,9 +13,10 @@ const register = async (req, res) => {
     const isFirstAccount = await User.countDocuments({}) === 0;
     const role = isFirstAccount ? 'admin' : 'user';
 
-    const newUser = await User.create({name, email, password, role});
-    const token = newUser.createJWT();
-    res.status(StatusCodes.CREATED).json({user: {name, email, role}, token})
+    const user = await User.create({name, email, password, role});
+    const tokenPayload = {name: user.name, userId: user._id, role: user.role};
+    attachCookiesToResponse({res, eachPayload: tokenPayload})
+    res.status(StatusCodes.CREATED).json({user: {tokenPayload}})
 }
 
 const login = async (req, res) => {
@@ -23,19 +25,32 @@ const login = async (req, res) => {
         throw new CustomErrors.BadRequestError('Please provide both email and password')
     }
     const user = await User.findOne({email});
+    
     if(!user) {
-        throw new CustomErrors.NotFoundError(`No user with that email : ${email}`)
+        throw new CustomErrors.UnauthenticatedError(`No user with that email : ${email}`)
     }
     const isPasswordMatch = await user.comparePassword(password);
+    
     if(!isPasswordMatch) {
         throw new CustomErrors.UnauthenticatedError('Either Password or Email is incorrect')
     }
-    const token = user.createJwt();
-    res.status(StatusCodes.ACCEPTED).json({user: {name: user.name} ,token})
+    
+    const tokenPayload = {name: user.name, userId: user._id, role: user.role};
+    attachCookiesToResponse({res, eachPayload: tokenPayload})
+    res.status(StatusCodes.ACCEPTED).json({user: {name: user.name}})
 }
 
 const logout = async (req, res) => {
-    res.send('logout completely')
+   const tokenCookie = req.signedCookies.token;
+   res.cookie(
+       'token', 
+       tokenCookie, 
+       {
+           httpOnly: true,
+           expires: new Date(Date.now())
+        }
+    )
+   res.status(StatusCodes.OK).json({msg : "you logged out"})
 }
 
 module.exports = {
