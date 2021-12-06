@@ -2,44 +2,64 @@ const mongoose = require('mongoose');
 
 const Product = await mongoose.Schema({
     name : {
-        type:String
+        type:String,
+        trim: true,
+        required: [true, 'Please provide product name'],
+        maxlength:[100, 'Name can not be more then 100 characters']
     },
     price: {
-        type:Number
+        type:Number,
+        required: [true, 'Please provide product price'],
+        default: 0
     },
     description: {
-        type:String
+        type:String,
+        required: [true, 'Please provide product description'],
+        maxlength:[100, 'Descriptions can not be more then 100 characters']
     },
     image: {
-        type:String
+        type:String,
+        default:'/uploads/example.jpg'
     },
     category: {
-        type:String
+        type:String,
+        required: [true, 'Please provide product category'],
+        enum: ['office', 'kitchen', 'bedroom']
     },
     company: {
-        type:String
+        type:String,
+        required: [true, 'Please provide product company'],
+        enum: {
+            values: ['ikea', 'liddy', 'marcos'],
+            message: '{VALUE} is not supported'
+        }
     },
     colors: {
-        type:[]
+        type: [String],
+        required: true,
     },
     featured: {
-        type:Boolean
+        type:Boolean,
+        default: false
     },
     freeShipping: {
-        type:Boolean
+        type:Boolean,
+        default: false
     },
     inventory:{
-        type:Number
+        type:Number,
+        required: true,
+        default: 15
     },
     averageRating:{
-        type:Number
+        type:Number,
+        default: 0
     },
-    createdBy: {
+    user: {
         type: mongoose.Types.ObjectId,
         ref: 'User',
         required: [true, 'Please provide user'],
-    },
-    timestamps: true
-})
+    }
+}, {timestamps: true})
 
 module.exports = mongoose.model('product', Product)
