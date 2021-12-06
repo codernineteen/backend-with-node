@@ -1,7 +1,7 @@
 const User = require('../models/User')
 const {StatusCodes} = require('http-status-codes')
 const CustomErrors = require('../errors');
-const {attachCookiesToResponse} = require('../utils')
+const {attachCookiesToResponse, createTokenPayload} = require('../utils')
 
 const register = async (req, res) => {
     const {email, name, password} = req.body
@@ -14,7 +14,7 @@ const register = async (req, res) => {
     const role = isFirstAccount ? 'admin' : 'user';
 
     const user = await User.create({name, email, password, role});
-    const tokenPayload = {name: user.name, userId: user._id, role: user.role};
+    const tokenPayload = createTokenPayload({user});
     attachCookiesToResponse({res, eachPayload: tokenPayload})
     res.status(StatusCodes.CREATED).json({user: {tokenPayload}})
 }
@@ -35,9 +35,10 @@ const login = async (req, res) => {
         throw new CustomErrors.UnauthenticatedError('Either Password or Email is incorrect')
     }
     
-    const tokenPayload = {name: user.name, userId: user._id, role: user.role};
+    const tokenPayload = createTokenPayload({user});
+    console.log(tokenPayload)
     attachCookiesToResponse({res, eachPayload: tokenPayload})
-    res.status(StatusCodes.ACCEPTED).json({user: {name: user.name}})
+    res.status(StatusCodes.ACCEPTED).json({user: {tokenPayload}})
 }
 
 const logout = async (req, res) => {
