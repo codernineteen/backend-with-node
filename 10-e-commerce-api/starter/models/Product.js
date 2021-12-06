@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const Product = await mongoose.Schema({
+const Product = new mongoose.Schema({
     name : {
         type:String,
         trim: true,
@@ -36,6 +36,7 @@ const Product = await mongoose.Schema({
     },
     colors: {
         type: [String],
+        default: ['#fff'],
         required: true,
     },
     featured: {

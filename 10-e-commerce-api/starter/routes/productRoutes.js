@@ -14,7 +14,7 @@ router.route('/')
     .get(getAllProducts)
     .post([authenticateUser, authorizePermission('admin')], createProduct)
 
- router.route('/uploadImage')
+router.route('/uploadImage')
     .post([authenticateUser, authorizePermission('admin')], uploadImage)
 
 router.route('/:id')
