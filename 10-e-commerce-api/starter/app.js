@@ -16,7 +16,9 @@ const cookieParser = require('cookie-parser')
 //router
 const authRouter = require('./routes/authRoutes');
 const userRouter = require('./routes/userRoutes');
-const productRouter = require('./routes/productRoutes')
+const productRouter = require('./routes/productRoutes');
+//image upload
+const fileUpload = require('express-fileupload');
 
 //Http logger
 app.use(morgan('tiny'));
@@ -24,6 +26,8 @@ app.use(morgan('tiny'));
 app.use(express.json());
 //Parse cookie
 app.use(cookieParser(process.env.JWT_SECRET));
+//Image uploader
+app.use(fileUpload());
 
 //route
 app.get('/', (req, res) => {
