@@ -1,4 +1,4 @@
-const Order = require('../models/Review');
+const Order = require('../models/Order');
 const Product = require('../models/Product');
 
 const {StatusCodes} = require('http-status-codes');
@@ -27,9 +27,10 @@ const createOrder = async (req, res) => {
             throw new CustomError.NotFoundError('No product with that id: ' + item.product)
         }
         const {name, price, image, _id} = dbProduct;
+        console.log(_id)
         const singleOrderItem = {
             amount: item.amount,
-            name, 
+            name,
             price, 
             image, 
             product: _id
@@ -47,7 +48,6 @@ const createOrder = async (req, res) => {
         amount: total,
         currency: 'usd'
     });
-    
     const order = await Order.create({
         orderItems, 
         total, 
@@ -57,25 +57,48 @@ const createOrder = async (req, res) => {
         clientSecret: paymentIntent.client_secret,
         user: req.user.userId
     });
-    res.status(StatusCodes.CREATED).json({order, clientSecret:order.clientSecret})
+    //res.status(StatusCodes.CREATED).json({order, clientSecret:order.clientSecret})
+    res.status(StatusCodes.CREATED).json({order, client_secret: order.clientSecret})
 }
 
 const getAllOrders = async (req, res) => {
-    res.send('getAllOrders');
+    const orders = await Order.find({});
+
+    res.status(StatusCodes.OK).json({orders})
 }
 
 const getSingleOrder = async (req, res) => {
-    res.send('getSingleOrder');
+    const order = await Order.findOne({_id: req.params.id});
+    if (!order) {
+        throw new CustomError.NotFoundError("No item with given id")
+    }
+    checkPermissions(req.user, order.user)
+    res.status(StatusCodes.OK).json({order})
 }
 
 
 const getCurrentUserOrders = async (req, res) => {
-    res.send('getCurrentUserOrders');
+    const order = await Order.findOne({user: req.user.userId});
+    if (!order) {
+        throw new CustomError.NotFoundError("No item with given id")
+    }
+    res.status(StatusCodes.OK).json({order})
 }
 
 
 const updateOrder = async (req, res) => {
-    res.send('updateOrder');
+    const {id: orderId} = req.params;
+    const {paymentIntentId} = req.body;
+    const order = await Order.findOne({_id: orderId});
+    if (!order) {
+        throw new CustomError.NotFoundError("No item with given id");
+    }
+    checkPermissions(req.user, order.user);
+    order.paymentIntentId = paymentIntentId;
+    order.status = 'paid';
+    await order.save();
+    
+    res.status(StatusCodes.OK).json({order})
 }
 
 
